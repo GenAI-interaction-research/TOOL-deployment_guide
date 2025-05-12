@@ -59,7 +59,7 @@ This guide is a starting framework. The detailed step-by-step content within man
 
 * **Methodological Paper:** ["Building GenAI-Driven Web Applications to Study USER-GenAI Interaction"](https://github.com/GenAI-interaction-research/.github)
 * **Tool to guide overall design decisions for GenAI driven web applications:** [https://genai-interaction-research.github.io/TOOL-decision_tree](https://genai-interaction-research.github.io/TOOL-decision_tree)
-* **GenAI Script Snippet Generator:** [https://genai-interaction-research.github.io/script_generator/](https://genai-interaction-research.github.io/TOOL-script_generator/)
+* **GenAI Script Snippet Generator:** [https://genai-interaction-research.github.io/TOOL-script_generator/](https://genai-interaction-research.github.io/TOOL-script_generator/)
 * **Main GitHub Organization:** [https://github.com/GenAI-interaction-research](https://github.com/GenAI-interaction-research)
 
 ## Feedback
