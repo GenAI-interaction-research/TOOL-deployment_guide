@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GenAI Research App - Deployment Guide</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Deployment Guide for GenAI Research Applications</h1>
+        <p>Step-by-step guidance for deploying your Python/Flask backend to the cloud.</p>
+    </header>
+
+    <section id="deployment-path-helper" class="guide-section interactive-helper">
+        <h2>Find Your Deployment Path</h2>
+        <p class="section-intro">Answer a few questions to get a recommendation for the most suitable deployment platform and guide for your needs. This will help you focus on the most relevant instructions below.</p>
+        <div id="helper-quiz-container">
+            <p>Loading deployment helper...</p>
+        </div>
+        <div id="helper-recommendation" style="display:none;">
+            </div>
+    </section>
+
+    <nav id="table-of-contents">
+        <h2>Full Guide Table of Contents</h2>
+        <p style="font-size: 0.9em; text-align: center; margin-bottom: 15px;">(Use the helper above for recommendations, or jump directly to a section)</p>
+        <ul>
+            <li><a href="#section-intro-main">1. Introduction</a></li>
+            <li><a href="#section-prerequisites">2. General Deployment Prerequisites</a>
+                <ul>
+                    <li><a href="#prereq-requirements">2.1. Managing Dependencies (<code>requirements.txt</code>)</a></li>
+                    <li><a href="#prereq-wsgi">2.2. Using a Production WSGI Server (Gunicorn)</a></li>
+                    <li><a href="#prereq-procfile">2.3. The <code>Procfile</code> (for some PaaS)</a></li>
+                    <li><a href="#prereq-dockerfile">2.4. Introduction to <code>Dockerfile</code> (for Containers)</a></li>
+                    <li><a href="#prereq-env">2.5. Securely Managing Environment Variables</a></li>
+                    <li><a href="#prereq-git">2.6. Using Version Control (Git)</a></li>
+                </ul>
+            </li>
+            <li><a href="#section-paas">3. Deploying to Platform-as-a-Service (PaaS - Recommended for Ease of Use)</a>
+                <ul>
+                    <li><a href="#paas-overview">3.1. What is PaaS & When to Choose It</a></li>
+                    <li><a href="#section-heroku">3.2. Example: Deploying to Heroku</a>
+                        <ul>
+                            <li><a href="#heroku-setup">3.2.1. Account & Heroku CLI Setup</a></li>
+                            <li><a href="#heroku-app">3.2.2. Creating Your Heroku App</a></li>
+                            <li><a href="#heroku-files">3.2.3. Preparing Files for Heroku</a></li>
+                            <li><a href="#heroku-deploy">3.2.4. Deploying Your Code</a></li>
+                            <li><a href="#heroku-env">3.2.5. Setting Environment Variables</a></li>
+                            <li><a href="#heroku-logs">3.2.6. Viewing Logs & Accessing App</a></li>
+                            <li><a href="#heroku-troubleshooting">3.2.7. Heroku Common Issues</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="#paas-other">3.3. Other PaaS Options (e.g., DigitalOcean App Platform)</a></li>
+                </ul>
+            </li>
+            <li><a href="#section-gcr">4. Deploying to Google Cloud Run (Containers/Serverless - Good for Scalability & Docker)</a>
+                <ul>
+                    <li><a href="#gcr-overview">4.1. Overview & When to Choose Cloud Run</a></li>
+                    <li><a href="#gcr-setup">4.2. Google Cloud Project & gcloud CLI Setup</a></li>
+                    <li><a href="#gcr-docker">4.3. Dockerizing Your Flask App for Cloud Run</a></li>
+                    <li><a href="#gcr-artifact">4.4. Pushing Docker Image to Artifact Registry</a></li>
+                    <li><a href="#gcr-deploy">4.5. Deploying to Cloud Run Service</a></li>
+                    <li><a href="#gcr-env">4.6. Setting Environment Variables on Cloud Run</a></li>
+                    <li><a href="#gcr-logs">4.7. Viewing Logs & Accessing Your Service</a></li>
+                    <li><a href="#gcr-troubleshooting">4.8. Cloud Run Common Issues</a></li>
+                </ul>
+            </li>
+            <li><a href="#section-faas">5. Deploying to Function-as-a-Service (FaaS - e.g., AWS Lambda, Google Cloud Functions)</a>
+                 <ul>
+                    <li><a href="#faas-overview">5.1. Architecture Overview & When to Choose FaaS</a></li>
+                    <li><a href="#faas-packaging">5.2. Packaging Flask for FaaS (Wrappers/Frameworks)</a></li>
+                    <li><a href="#faas-create">5.3. Creating Functions & API Triggers</a></li>
+                    <li><a href="#faas-env">5.4. Setting Environment Variables in FaaS</a></li>
+                    <li><a href="#faas-troubleshooting">5.5. FaaS Common Issues</a></li>
+                </ul>
+            </li>
+            <li><a href="#section-iaas">6. Deploying to Infrastructure-as-a-Service (IaaS - For Maximum Control with Docker)</a>
+                <ul>
+                    <li><a href="#iaas-overview">6.1. What is IaaS & When to Consider It</a></li>
+                    <li><a href="#iaas-steps">6.2. General IaaS Deployment Steps (Conceptual)</a></li>
+                    <li><a href="#iaas-considerations">6.3. Key IaaS Responsibilities & Challenges</a></li>
+                </ul>
+            </li>
+            <li><a href="#section-docker-deepdive">7. Dockerization Deep Dive</a>
+                 <ul>
+                    <li><a href="#docker-why">7.1. Why Use Docker for Your Research App?</a></li>
+                    <li><a href="#docker-writing">7.2. Writing an Optimized <code>Dockerfile</code> for Flask</a></li>
+                    <li><a href="#docker-build-run">7.3. Building & Running Docker Images Locally</a></li>
+                    <li><a href="#docker-ignore">7.4. Using a <code>.dockerignore</code> File</a></li>
+                </ul>
+            </li>
+            <li><a href="#section-troubleshooting-general">8. General Deployment Troubleshooting</a></li>
+            <li><a href="#section-security">9. Deployment Security Best Practices</a></li>
+            <li><a href="#tools-and-resources-main">10. Tools & Further Resources</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section id="section-intro-main" class="guide-section">
+            <h2>1. Introduction to This Guide</h2>
+            <p class="section-intro">Deploying a web application, especially one that interacts with AI services, can seem daunting. This guide aims to simplify the process for researchers by providing targeted recommendations and step-by-step instructions for deploying Python/Flask backend applications (like those discussed in the methodological paper or generated with related tools).</p>
+            <p>The goal is not to be exhaustive for every platform, but to offer clear paths for common research scenarios, focusing on ease of use, scalability, cost-effectiveness, and security. Use the "Deployment Path Helper" above for a personalized recommendation, or navigate directly to a section using the Table of Contents.</p>
+        </section>
+
+        <section id="section-prerequisites" class="guide-section">
+            <h2>2. General Deployment Prerequisites</h2>
+            <p class="section-intro">Before deploying to any cloud platform, there are some common files and concepts to understand and prepare for your Flask application.</p>
+            <article id="prereq-requirements" class="question-block"><h3 class="question-title">2.1. Managing Dependencies (<code>requirements.txt</code>) <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p>A <code>requirements.txt</code> file tells the hosting platform which Python packages your application needs to run. It's crucial for creating a consistent environment.</p><p><strong>What it is:</strong> A simple text file listing all external Python libraries your project depends on, along with their specific versions (e.g., <code>Flask==3.0.0</code>, <code>gunicorn==22.0.0</code>).</p><p><strong>Why it's important:</strong> Ensures that the exact same versions of libraries used during development are installed on the deployment server, preventing "it works on my machine" issues due to version mismatches.</p><p><strong>How to create/update:</strong><ol><li>Ensure you have a virtual environment for your project (e.g., created with <code>python -m venv venv</code>) and that it's activated (<code>source venv/bin/activate</code> or <code>venv\Scripts\activate</code>).</li><li>Install all your dependencies within this virtual environment (e.g., <code>pip install Flask gunicorn python-dotenv google-generativeai</code>).</li><li>Once all dependencies are installed and your app works locally, generate the file by running:<br><code>pip freeze > requirements.txt</code></li></ol></p><p>This command captures all packages currently in your active virtual environment. Make sure this file is committed to your Git repository.</p></div></article>
+            <article id="prereq-wsgi" class="question-block"><h3 class="question-title">2.2. Using a Production WSGI Server (Gunicorn) <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p>The server you use when running <code>flask run</code> or <code>app.run(debug=True)</code> is Flask's built-in <strong>development server</strong>. It's excellent for local development and debugging but is NOT designed to be robust, secure, or efficient enough for handling real user traffic in a production (live) environment.</p><p><strong>What is a WSGI Server?</strong> WSGI (Web Server Gateway Interface) is a standard interface between Python web applications/frameworks (like Flask) and web servers. A production WSGI server is built to handle multiple concurrent requests, manage worker processes, and provide better performance and stability.</p><p><strong>Gunicorn ("Green Unicorn"):</strong><ul><li>A very popular and widely used WSGI HTTP server for Python web applications in Unix-like environments (most cloud platforms use Linux).</li><li>Install it in your virtual environment: <code>pip install gunicorn</code> (and ensure it's in your <code>requirements.txt</code>).</li><li><strong>Basic Command:</strong> To run your Flask app (assuming your Flask app instance is named <code>app</code> in a file named <code>app.py</code>) with Gunicorn:<br><code>gunicorn --workers 4 --bind 0.0.0.0:8080 app:app</code><ul><li><code>--workers 4</code>: Specifies the number of worker processes. A common recommendation is <code>(2 * number_of_CPU_cores) + 1</code>.</li><li><code>--bind 0.0.0.0:8080</code>: Tells Gunicorn to listen on port 8080 on all available network interfaces. Hosting platforms often provide a <code>$PORT</code> environment variable, so you'd use <code>--bind 0.0.0.0:$PORT</code>.</li><li><code>app:app</code>: Refers to <code>filename:Flask_application_instance_name</code>.</li></ul></li></ul></p><p>Your deployment platform will typically execute a Gunicorn command (or similar) to run your application.</p></div></article>
+            <article id="prereq-procfile" class="question-block"><h3 class="question-title">2.3. The <code>Procfile</code> (for some PaaS) <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p>A <code>Procfile</code> is a text file, named exactly <code>Procfile</code> (with a capital 'P' and no file extension), located in the root directory of your project. It's used by some Platform-as-a-Service (PaaS) providers, most notably Heroku, to declare what commands should be run to start different types of processes for your application.</p><p><strong>What it does:</strong> For a web application, you'll typically define a `web` process type. This tells the platform how to start your web server (e.g., Gunicorn running your Flask app).</p><p><strong>Example for a Flask app with Gunicorn:</strong><pre><code>web: gunicorn app:app --log-file - --log-level info</code></pre><ul><li><code>web:</code> Declares this as the command for the web dyno/process.</li><li><code>gunicorn app:app</code>: The command to start Gunicorn (assuming your Flask app instance is <code>app</code> in <code>app.py</code>).</li><li><code>--log-file -</code>: Tells Gunicorn to send its logs to standard output (stdout). Most platforms capture stdout/stderr for their logging systems.</li><li><code>--log-level info</code>: Sets the logging verbosity.</li></ul></p><p>The specific Gunicorn parameters (like number of workers) might be further configured via environment variables or platform settings on Heroku.</p></div></article>
+            <article id="prereq-dockerfile" class="question-block"><h3 class="question-title">2.4. Introduction to <code>Dockerfile</code> (for Containers) <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p>A <code>Dockerfile</code> is a text file that contains a set of instructions for building a Docker image. A Docker image is a lightweight, standalone, executable package that includes everything needed to run a piece of software, including the code, runtime, system tools, system libraries, and settings.</p><p><strong>Why use Docker?</strong><ul><li><strong>Consistency:</strong> Ensures your application runs the same way in development, testing, and production, regardless of the underlying environment.</li><li><strong>Portability:</strong> Docker containers can run on any system that has Docker installed (your laptop, cloud servers, etc.).</li><li><strong>Dependency Management:</strong> All dependencies are packaged within the image.</li><li><strong>Scalability:</strong> Many modern cloud platforms (like Google Cloud Run, AWS ECS/Fargate) are designed to run and scale Docker containers.</li></ul></p><p>The file must be named <code>Dockerfile</code> (no extension) and is typically placed in the root of your project.</p><p>A detailed example and explanation are in the <a href="#section-docker-deepdive">Dockerization Deep Dive section</a> of this guide.</p></div></article>
+            <article id="prereq-env" class="question-block"><h3 class="question-title">2.5. Securely Managing Environment Variables <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p>Your application will require sensitive information, such as API keys (e.g., <code>GEMINI_API_KEY</code>, <code>OPENAI_API_KEY</code>), database credentials, or a Flask <code>SECRET_KEY</code>. These should **NEVER** be hardcoded directly into your source code or committed to your Git repository.</p><p><strong>Environment Variables are the solution:</strong><ul><li><strong>What they are:</strong> Variables that are part of the environment in which your application process runs. Your code can access their values (e.g., using <code>os.getenv('API_KEY')</code> in Python).</li><li><strong>Local Development (<code>.env</code> file):</strong><ul><li>Create a file named <code>.env</code> in your project's root directory.</li><li>Add your key-value pairs, e.g.:<br><code>GEMINI_API_KEY="your_actual_gemini_api_key_here"</code><br><code>FLASK_APP="app.py"</code><br><code>FLASK_DEBUG="True"</code></li><li>The <code>python-dotenv</code> library (which should be in your <code>requirements.txt</code>) automatically loads these variables from the <code>.env</code> file when your Flask app starts (via <code>load_dotenv()</code>).</li><li><strong>CRUCIAL: Add <code>.env</code> to your <code>.gitignore</code> file</strong> to prevent it from ever being committed.</li></ul></li><li><strong>Production/Deployment:</strong><ul><li>You do NOT upload your <code>.env</code> file to the hosting platform.</li><li>Instead, each hosting platform provides a secure way to set these environment variables directly within their system (e.g., Heroku Config Vars, Google Cloud Run Environment Variables, AWS Lambda Environment Variables). These will be covered in the platform-specific deployment sections. Your deployed application will then pick them up using <code>os.getenv()</code> just like it does locally.</li></ul></li></ul></div></article>
+            <article id="prereq-git" class="question-block"><h3 class="question-title">2.6. Using Version Control (Git) <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p>Git is a distributed version control system that is essential for modern software development and deployment.</p><p><strong>Why use Git?</strong><ul><li><strong>Track Changes:</strong> Keep a history of all modifications to your code.</li><li><strong>Collaboration:</strong> Facilitates teamwork.</li><li><strong>Branching:</strong> Allows you to work on new features or experiments in isolation.</li><li><strong>Rollback:</strong> Easily revert to previous versions if something goes wrong.</li><li><strong>Deployment:</strong> Many PaaS platforms deploy directly from a Git repository.</li></ul></p><p><strong>Basic Git Workflow:</strong><ol><li><strong>Initialize:</strong> <code>git init</code>.</li><li><strong><code>.gitignore</code> File:</strong> Create this to exclude sensitive files (<code>.env</code>), virtual environments (<code>venv/</code>), Python bytecode (<code>__pycache__/</code>), etc.</li><li><strong>Stage Changes:</strong> <code>git add .</code> or <code>git add &lt;filename&gt;</code>.</li><li><strong>Commit Changes:</strong> <code>git commit -m "Descriptive message"</code>.</li><li><strong>Remote Repository (e.g., GitHub):</strong> Link with <code>git remote add origin &lt;url&gt;</code> and push with <code>git push -u origin main</code>.</li></ol></p></div></article>
+            <p><a href="#table-of-contents" class="back-to-top">Back to Table of Contents</a></p>
+        </section>
+
+        <section id="section-paas" class="guide-section">
+            <h2>3. Deploying to Platform-as-a-Service (PaaS - Recommended for Ease of Use)</h2>
+            <article id="paas-overview" class="question-block">
+                <h3 class="question-title">3.1. What is PaaS & When to Choose It <span class="toggle-icon">[+]</span></h3>
+                <div class="answer-guidance" style="display: none;">
+                    <p>Platform-as-a-Service (PaaS) provides a platform for you to deploy and run your application code without managing the underlying infrastructure (servers, operating systems, networking). The PaaS provider handles this for you.</p>
+                    <p><strong>Choose PaaS if:</strong></p>
+                    <ul>
+                        <li><strong>Ease of Use is a Priority:</strong> PaaS solutions are generally the simplest way to get a web application online.</li>
+                        <li><strong>You Want to Focus on Code, Not Servers:</strong> You prefer to avoid server administration tasks like OS patching, software installation, and manual scaling configuration.</li>
+                        <li><strong>Rapid Deployment Needed:</strong> Many PaaS platforms offer quick deployment directly from a Git repository.</li>
+                        <li><strong>Standard Application Stack:</strong> Your application uses common languages/frameworks (like Python/Flask) and doesn't have highly unusual OS-level dependencies.</li>
+                    </ul>
+                    <p>Examples include Heroku, DigitalOcean App Platform, Google App Engine (Standard Environment), AWS Elastic Beanstalk. This guide will use Heroku as a detailed example due to its historical popularity for simplicity.</p>
+                </div>
+            </article>
+
+            <section id="section-heroku" class="sub-guide-section">
+                <h4 class="sub-section-title">3.2. Example: Deploying to Heroku</h4>
+                <p class="section-intro">Heroku is a well-known PaaS that simplifies deployment. While its free tier has changed, it remains a good example of PaaS workflows.</p>
+                <article id="heroku-setup" class="question-block"><h3 class="question-title">3.2.1. Heroku Account & CLI Setup <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p><strong>1. Create a Heroku Account:</strong> Sign up at <a href="https://www.heroku.com/" target="_blank" rel="noopener noreferrer">heroku.com</a>.<br><strong>2. Install Heroku CLI:</strong> Follow instructions at <a href="https://devcenter.heroku.com/articles/heroku-cli" target="_blank" rel="noopener noreferrer">Heroku CLI</a>.<br><strong>3. Login via CLI:</strong> Open your terminal and run <code>heroku login</code>. This will open a browser window for authentication.</p></div></article>
+                <article id="heroku-app" class="question-block"><h3 class="question-title">3.2.2. Creating Your Heroku App <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p>In your terminal, navigate to your project directory and run: <code>heroku create your-unique-app-name</code> (replace <code>your-unique-app-name</code> or let Heroku generate one). This also adds a Heroku git remote.</p></div></article>
+                <article id="heroku-files" class="question-block"><h3 class="question-title">3.2.3. Preparing Files for Heroku <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p>Ensure these are in your project root: <br> - <code>requirements.txt</code> (see <a href="#prereq-requirements">2.1</a>) <br> - <code>Procfile</code> with content like <code>web: gunicorn app:app --log-file -</code> (see <a href="#prereq-procfile">2.3</a>) <br> - Optionally, <code>runtime.txt</code> specifying Python version (e.g., <code>python-3.11.7</code>)</p></div></article>
+                <article id="heroku-deploy" class="question-block"><h3 class="question-title">3.2.4. Deploying Your Code <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p>Commit your files to Git: <br><code>git add .</code><br><code>git commit -m "Prepare for Heroku deployment"</code><br>Then deploy: <br><code>git push heroku main</code> (or your default branch, e.g., <code>master</code>)</p></div></article>
+                <article id="heroku-env" class="question-block"><h3 class="question-title">3.2.5. Setting Environment Variables (Config Vars) <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p>Use the Heroku CLI: <br><code>heroku config:set YOUR_API_KEY="actual_value_of_key" -a your-heroku-app-name</code><br>Or set them in the Heroku Dashboard under your app's "Settings" > "Config Vars".</p></div></article>
+                <article id="heroku-logs" class="question-block"><h3 class="question-title">3.2.6. Viewing Logs & Accessing App <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p>View logs: <code>heroku logs --tail -a your-heroku-app-name</code><br>Open your app: <code>heroku open -a your-heroku-app-name</code> or go to <code>https://your-heroku-app-name.herokuapp.com</code>.</p></div></article>
+                <article id="heroku-troubleshooting" class="question-block"><h3 class="question-title">3.2.7. Heroku Common Issues <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p>Application Error (H10 - App crashed), Slug size, Dyno sleeping, Boot timeout (R10). Always check <code>heroku logs --tail</code> first.</p></div></article>
+            </section>
+
+            <article id="paas-other" class="question-block">
+                <h3 class="question-title">3.3. Other PaaS Options <span class="toggle-icon">[+]</span></h3>
+                <div class="answer-guidance" style="display: none;">
+                    <p>Besides Heroku, other PaaS platforms offer similar ease-of-use for deploying web applications:</p>
+                    <ul>
+                        <li><strong>DigitalOcean App Platform:</strong> Known for its simplicity and predictable pricing. Can deploy from Git or Docker images. See <a href="https://www.digitalocean.com/products/app-platform" target="_blank" rel="noopener noreferrer">DigitalOcean App Platform Docs</a>.</li>
+                        <li><strong>Render:</strong> Another popular choice for its ease of use, similar to Heroku. Offers free tiers for static sites and small services. See <a href="https://render.com/" target="_blank" rel="noopener noreferrer">Render Docs</a>.</li>
+                        <li><strong>Google App Engine (Standard Environment):</strong> A mature PaaS from Google, good for Python apps if you're in the GCP ecosystem. More structured than Heroku. See <a href="https://cloud.google.com/appengine/docs/standard/python3" target="_blank" rel="noopener noreferrer">App Engine Python 3 Docs</a>.</li>
+                        <li><strong>AWS Elastic Beanstalk:</strong> Amazon's PaaS, more configurable than some others but also more complex. See <a href="https://aws.amazon.com/elasticbeanstalk/getting-started/" target="_blank" rel="noopener noreferrer">Elastic Beanstalk Docs</a>.</li>
+                    </ul>
+                    <p>The general principles of preparing <code>requirements.txt</code> and setting environment variables apply to most PaaS solutions, though specific commands and configuration files (like <code>Procfile</code>) might vary.</p>
+                </div>
+            </article>
+            <p><a href="#table-of-contents" class="back-to-top">Back to Table of Contents</a></p>
+        </section>
+
+        <section id="section-gcr" class="guide-section">
+            <h2>4. Deploying to Google Cloud Run (Containers/Serverless - Good for Scalability & Docker)</h2>
+            <article id="gcr-overview" class="question-block"><h3 class="question-title">4.1. Overview & When to Choose Cloud Run <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p>Google Cloud Run is a fully managed serverless platform for running stateless containers. It automatically scales up or down (even to zero), making it cost-effective for variable traffic.</p><p><strong>Choose Google Cloud Run if:</strong><ul><li>You want excellent scalability and pay-per-use pricing.</li><li>You are comfortable with Docker (or willing to learn it) for containerizing your application, as this is a primary deployment method. (Cloud Run also supports deploying from source, using Google Cloud Buildpacks).</li><li>You might want to integrate with other Google Cloud Platform (GCP) services.</li><li>Your application is stateless.</li></ul></p></div></article>
+            <article id="gcr-setup" class="question-block"><h3 class="question-title">4.2. Google Cloud Project & gcloud CLI Setup <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p><strong>1. GCP Account & Project:</strong> Create an account at <a href="https://cloud.google.com/" target="_blank" rel="noopener noreferrer">cloud.google.com</a>, create/select a project, enable billing.<br><strong>2. Install gcloud CLI:</strong> Follow <a href="https://cloud.google.com/sdk/docs/install" target="_blank" rel="noopener noreferrer">SDK instructions</a>.<br><strong>3. Authenticate & Configure:</strong> <code>gcloud auth login</code>, <code>gcloud auth application-default login</code>, <code>gcloud config set project YOUR_PROJECT_ID</code>.<br><strong>4. Enable APIs:</strong> In GCP Console, enable "Cloud Run API", "Artifact Registry API", "Cloud Build API".</p></div></article>
+            <article id="gcr-docker" class="question-block"><h3 class="question-title">4.3. Dockerizing Your Flask App for Cloud Run <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p>Create a <code>Dockerfile</code> (see <a href="#docker-writing">section 7.2</a>). Key for Cloud Run: Gunicorn CMD should use <code>:$PORT</code> (e.g., <code>CMD exec gunicorn --bind :$PORT --workers 1 --threads 80 --timeout 0 app:app</code>). Cloud Run injects this <code>PORT</code> variable (default 8080).</p></div></article>
+            <article id="gcr-artifact" class="question-block"><h3 class="question-title">4.4. Pushing Docker Image to Artifact Registry <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p><strong>1. Create Repo:</strong> <code>gcloud artifacts repositories create YOUR_REPO --repository-format=docker --location=YOUR_REGION</code>.<br><strong>2. Auth Docker:</strong> <code>gcloud auth configure-docker YOUR_REGION-docker.pkg.dev</code>.<br><strong>3. Build & Tag:</strong> <code>docker build -t YOUR_REGION-docker.pkg.dev/PROJECT_ID/REPO/IMAGE:TAG .</code><br><strong>4. Push:</strong> <code>docker push YOUR_REGION-docker.pkg.dev/PROJECT_ID/REPO/IMAGE:TAG</code>.</p></div></article>
+            <article id="gcr-deploy" class="question-block"><h3 class="question-title">4.5. Deploying to Cloud Run Service <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p><code>gcloud run deploy YOUR_SERVICE --image YOUR_REGION-docker.pkg.dev/PROJECT_ID/REPO/IMAGE:TAG --platform managed --region YOUR_REGION --allow-unauthenticated</code>. Set CPU/memory/instances as needed.</p></div></article>
+            <article id="gcr-env" class="question-block"><h3 class="question-title">4.6. Setting Environment Variables on Cloud Run <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p>During deploy: <code>--set-env-vars KEY=VALUE</code>. Or update: <code>gcloud run services update YOUR_SERVICE --update-env-vars KEY=VALUE</code>. Also via GCP Console.</p></div></article>
+            <article id="gcr-logs" class="question-block"><h3 class="question-title">4.7. Viewing Logs & Accessing Your Service <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p>Logs are in Google Cloud Logging. Service URL provided on deploy.</p></div></article>
+            <article id="gcr-troubleshooting" class="question-block"><h3 class="question-title">4.8. Cloud Run Common Issues <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p>Container failing to start (check logs for app errors, port binding on <code>$PORT</code>), permission issues, cold starts (can set min-instances=1).</p></div></article>
+            <p><a href="#table-of-contents" class="back-to-top">Back to Table of Contents</a></p>
+        </section>
+
+        <section id="section-faas" class="guide-section">
+            <h2>5. Deploying to Function-as-a-Service (FaaS - e.g., AWS Lambda, Google Cloud Functions)</h2>
+            <article id="faas-overview" class="question-block"><h3 class="question-title">5.1. Architecture Overview & When to Choose FaaS <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p>FaaS platforms run your code in response to events (like HTTP requests via an API Gateway) without managing servers. Excellent for scalability and pay-per-use.</p><p><strong>Choose FaaS if:</strong><ul><li>You want fine-grained scaling and cost control (pay only for execution time).</li><li>Your application can be structured as stateless functions.</li><li>You are comfortable with the serverless paradigm and potentially more complex deployment/packaging for web frameworks like Flask.</li><li>You want deep integration with a specific cloud provider's event sources and services.</li></ul></p></div></article>
+            <article id="faas-packaging" class="question-block"><h3 class="question-title">5.2. Packaging Flask for FaaS (Wrappers/Frameworks) <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p>Running a full WSGI application like Flask on FaaS typically requires a "wrapper" or "adapter" to translate the FaaS event (e.g., API Gateway event) into a WSGI-compatible request that Flask can understand. Popular options include:<ul><li><strong>AWS Lambda:</strong> AWS Lambda Web Adapter (allows running web apps in containers on Lambda), Serverless Framework, AWS SAM (Serverless Application Model), Zappa, Chalice.</li><li><strong>Google Cloud Functions:</strong> Natively supports HTTP triggers that can invoke Python functions. For a full Flask app, you'd structure your main Python file to handle the GCF request object and route it to your Flask app.</li></ul>Packaging involves creating a deployment artifact (e.g., .zip file or Docker image for Lambda) containing your app code and all dependencies.</p></div></article>
+            <article id="faas-create" class="question-block"><h3 class="question-title">5.3. Creating Functions & API Triggers <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p>This process varies significantly between AWS Lambda and Google Cloud Functions, and whether you're using the console, CLI, or an IaC (Infrastructure-as-Code) tool like SAM or Serverless Framework.</p><p><strong>General Steps:</strong><ol><li>Define your function (Python runtime, handler method, memory/timeout settings).</li><li>Upload your deployment package.</li><li>Configure an HTTP trigger (e.g., AWS API Gateway endpoint, Google Cloud Functions HTTP trigger).</li><li>Set permissions for the trigger to invoke your function.</li><li>Deploy the function and the API trigger.</li></ol></p></div></article>
+            <article id="faas-env" class="question-block"><h3 class="question-title">5.4. Setting Environment Variables in FaaS <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p>Both AWS Lambda and Google Cloud Functions allow setting environment variables directly in the function's configuration settings via their respective consoles, CLIs, or IaC templates.</p></div></article>
+            <article id="faas-troubleshooting" class="question-block"><h3 class="question-title">5.5. FaaS Common Issues <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p>Cold starts (initial delay for an idle function), execution timeouts, memory limits, complex local testing/debugging, understanding IAM permissions, packaging errors, API Gateway configuration errors.</p></div></article>
+            <p><a href="#table-of-contents" class="back-to-top">Back to Table of Contents</a></p>
+        </section>
+
+        <section id="section-iaas" class="guide-section">
+            <h2>6. Deploying to Infrastructure-as-a-Service (IaaS - For Maximum Control with Docker)</h2>
+            <article id="iaas-overview" class="question-block">
+                <h3 class="question-title">6.1. What is IaaS & When to Consider It <span class="toggle-icon">[+]</span></h3>
+                <div class="answer-guidance" style="display: none;">
+                    <p>Infrastructure-as-a-Service (IaaS) provides you with raw computing infrastructure – virtual servers (VMs), storage, networks – which you manage yourself. Examples: DigitalOcean Droplets, AWS EC2, Google Compute Engine, Azure Virtual Machines.</p>
+                    <p><strong>Consider IaaS if:</strong></p>
+                    <ul>
+                        <li>You need **maximum control** over the server environment (OS, specific software versions, kernel parameters).</li>
+                        <li>Your application has very specific or heavy **resource requirements** (e.g., GPUs for backend processing, large amounts of RAM/CPU) that might be more cost-effective or configurable on dedicated VMs compared to managed PaaS/FaaS offerings. (Note: For GenAI research, often the GenAI API call is the heavy part, not the Flask app itself, making PaaS/Serverless suitable for the Flask app.)</li>
+                        <li>You have existing infrastructure or specific networking requirements.</li>
+                        <li>You have the **technical expertise and time** for server administration (setup, security patching, software updates, scaling, backups, monitoring).</li>
+                    </ul>
+                    <p>As highlighted in the methodological paper, the image generation showcase used IaaS (DigitalOcean) due to the anticipated resource needs of handling image processing and external API interactions at scale, demonstrating its utility for more demanding research applications.</p>
+                </div>
+            </article>
+            <article id="iaas-steps" class="question-block">
+                <h3 class="question-title">6.2. General IaaS Deployment Steps (Conceptual, using Docker) <span class="toggle-icon">[+]</span></h3>
+                <div class="answer-guidance" style="display: none;">
+                    <p>Deploying a Dockerized Flask app to an IaaS VM typically involves these high-level steps (details vary by provider):</p>
+                    <ol>
+                        <li><strong>Provision a Virtual Machine (VM):</strong> Choose an OS (commonly Linux, e.g., Ubuntu), VM size (CPU, RAM, disk), and region from your cloud provider.</li>
+                        <li><strong>Initial Server Setup:</strong>
+                            <ul>
+                                <li>Connect to your VM via SSH.</li>
+                                <li>Update system packages (e.g., <code>sudo apt update && sudo apt upgrade</code>).</li>
+                                <li>Create a non-root user with sudo privileges for running your application.</li>
+                                <li>Set up basic firewall rules (e.g., using <code>ufw</code>), allowing SSH (port 22) and HTTP/HTTPS (ports 80/443).</li>
+                            </ul>
+                        </li>
+                        <li><strong>Install Docker & Docker Compose:</strong> Follow official Docker installation guides for your chosen OS.</li>
+                        <li><strong>Get Your Application Code/Image:</strong>
+                            <ul>
+                                <li>Option A (Code): Clone your Git repository onto the VM. Build your Docker image directly on the VM using your <code>Dockerfile</code> (<code>docker build -t myapp .</code>).</li>
+                                <li>Option B (Image): If you've already built and pushed your Docker image to a registry (like Docker Hub, Google Artifact Registry, AWS ECR), pull it onto the VM (<code>docker pull yourregistry/yourimage:tag</code>).</li>
+                            </ul>
+                        </li>
+                        <li><strong>Run Your Docker Container:</strong>
+                            <br><code>docker run -d --restart always -p 80:8080 -e VAR1=value1 -e API_KEY=secret yourregistry/yourimage:tag</code>
+                            <ul>
+                                <li><code>-d</code>: Run in detached mode (background).</li>
+                                <li><code>--restart always</code>: Automatically restart the container if it stops.</li>
+                                <li><code>-p 80:8080</code>: Map port 80 on the VM to port 8080 inside your container (assuming your Gunicorn inside the container listens on 8080 via <code>$PORT</code>). For HTTPS, you'd typically use a reverse proxy for SSL termination.</li>
+                                <li><code>-e VAR1=value1</code>: Pass environment variables.</li>
+                            </ul>
+                            <p>Consider using Docker Compose for managing multi-container applications or simplifying run commands.</p>
+                        </li>
+                        <li><strong>Set up a Reverse Proxy (e.g., Nginx, Caddy - Recommended):</strong>
+                            <ul>
+                                <li>Install Nginx (<code>sudo apt install nginx</code>).</li>
+                                <li>Configure Nginx as a reverse proxy to forward requests from port 80 (HTTP) / 443 (HTTPS) on your VM to your Docker container's exposed port (e.g., 8080).</li>
+                                <li>Nginx can also handle SSL/TLS termination (for HTTPS), static file serving, load balancing (if running multiple containers), and basic caching.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Configure DNS:</strong> Point your domain name (if any) to your VM's public IP address.</li>
+                        <li><strong>Set up SSL/TLS (HTTPS):</strong> Use Let's Encrypt (with Certbot) to get free SSL certificates for your domain, configured through Nginx.</li>
+                        <li><strong>Monitoring & Logging:</strong> Set up tools to monitor your VM's resources and application logs.</li>
+                    </ol>
+                </div>
+            </article>
+            <article id="iaas-considerations" class="question-block">
+                <h3 class="question-title">6.3. Key IaaS Responsibilities & Challenges <span class="toggle-icon">[+]</span></h3>
+                <div class="answer-guidance" style="display: none;">
+                    <p>While IaaS offers great control, it comes with significant responsibilities:</p>
+                    <ul>
+                        <li><strong>Server Management:</strong> You are responsible for OS updates, security patching, software installation, and troubleshooting server-level issues.</li>
+                        <li><strong>Security:</strong> Configuring firewalls, managing SSH access, securing your application and server against vulnerabilities, setting up HTTPS.</li>
+                        <li><strong>Scaling:</strong> Manual or requires setting up auto-scaling groups and load balancers (more complex than PaaS/FaaS auto-scaling).</li>
+                        <li><strong>Backups & Disaster Recovery:</strong> Implementing strategies for backing up your application data and server state.</li>
+                        <li><strong>Cost Management:</strong> VMs run 24/7 (unless stopped), so costs can accumulate if not managed. You pay for compute, storage, and network traffic.</li>
+                        <li><strong>Complexity:</strong> Requires more system administration knowledge than PaaS or FaaS.</li>
+                    </ul>
+                    <p>Using Docker on IaaS simplifies application deployment *onto* the VM, but the VM itself still needs management.</p>
+                </div>
+            </article>
+            <p><a href="#table-of-contents" class="back-to-top">Back to Table of Contents</a></p>
+        </section>
+
+        <section id="section-docker-deepdive" class="guide-section">
+            <h2>7. Dockerization Deep Dive</h2>
+            <article id="docker-why" class="question-block"><h3 class="question-title">7.1. Why Use Docker for Your Research App? <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p>Benefits: consistent environment ("works on my machine, works everywhere"), dependency isolation, portability between cloud providers or local/cloud, easier scaling, improved reproducibility for your research setup.</p></div></article>
+            <article id="docker-writing" class="question-block"><h3 class="question-title">7.2. Writing an Optimized <code>Dockerfile</code> for Flask <span class="toggle-icon">[+]</span></h3>
+                <div class="answer-guidance" style="display: none;">
+                    <p>A well-written <code>Dockerfile</code> is key for efficient and secure container images.</p>
+                    <pre><code>
+# 1. Use an official Python slim image for a smaller base
+FROM python:3.11-slim-bullseye
+
+# 2. Set environment variables for Python best practices
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+# 3. Set the working directory inside the container
+WORKDIR /app
+
+# 4. Create a non-root user and group for security
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+# (For alpine based images use: RUN addgroup -S appgroup && adduser -S -G appgroup appuser)
+
+# 5. Copy only the requirements file first to leverage Docker cache
+COPY requirements.txt .
+
+# 6. Install dependencies as the non-root user (or root if necessary for system packages)
+# Ensure pip is up-to-date and use --no-cache-dir
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+# If you needed system packages:
+# USER root
+# RUN apt-get update && apt-get install -y --no-install-recommends some-package && rm -rf /var/lib/apt/lists/*
+# USER appuser
+
+# 7. Copy the rest of the application code
+# Ensure .dockerignore is properly set up to exclude venv, .git, .env etc.
+COPY . .
+
+# 8. Change ownership of the app directory to the non-root user
+# USER root # Temporarily switch to root if needed for chown
+# RUN chown -R appuser:appgroup /app # Switch back to appuser if needed by base image or for subsequent RUN
+# USER appuser # Ensure app runs as non-root
+
+# 9. Expose the port the app runs on (Cloud Run default is 8080)
+# This is documentation; the actual binding happens in the CMD
+ENV PORT 8080
+EXPOSE $PORT
+
+# 10. Command to run the application using Gunicorn
+# Use exec for proper signal handling
+# Bind to 0.0.0.0 to be accessible from outside the container on the mapped port
+# Number of workers and threads can be tuned based on app needs and resources
+CMD exec gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 0 app:app
+                    </code></pre>
+                    <p>This example includes creating a non-root user for better security, which is a good practice. Adjust paths and commands as needed for your specific app structure.</p>
+                </div>
+            </article>
+            <article id="docker-build-run" class="question-block"><h3 class="question-title">7.3. Building & Running Docker Images Locally <span class="toggle-icon">[+]</span></h3>
+                <div class="answer-guidance" style="display: none;">
+                    <p><strong>Build the image:</strong> In the directory with your <code>Dockerfile</code>:
+                    <br><code>docker build -t your-app-name .</code></p>
+                    <p><strong>Run the container locally:</strong>
+                    <br><code>docker run -p 8080:8080 -e GEMINI_API_KEY="your_key" your-app-name</code>
+                    <br>(Maps port 8080 on host to <code>$PORT</code> in container. Use <code>--env-file ./.env</code> to load multiple env vars from a local <code>.env</code> file for testing).</p>
+                    <p>Access at <code>http://localhost:8080</code>.</p>
+                </div>
+            </article>
+            <article id="docker-ignore" class="question-block"><h3 class="question-title">7.4. Using a <code>.dockerignore</code> File <span class="toggle-icon">[+]</span></h3>
+                <div class="answer-guidance" style="display: none;">
+                    <p>Similar to <code>.gitignore</code>, a <code>.dockerignore</code> file in your project root tells Docker which files and folders to exclude when building the image. This keeps your image small and build times fast.</p>
+                    <p><strong>Example <code>.dockerignore</code> content:</strong></p>
+                    <pre><code>
+.git
+.gitignore
+.dockerignore
+Dockerfile
+README.md
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.DS_Store
+Thumbs.db
+# Any local configuration or secret files NOT for the image
+*.env
+instance/
+# Test files if not needed in production image
+tests/
+*.test.js
+*.test.py
+                    </code></pre>
+                </div>
+            </article>
+            <p><a href="#table-of-contents" class="back-to-top">Back to Table of Contents</a></p>
+        </section>
+
+        <section id="section-troubleshooting-general" class="guide-section">
+            <h2>8. General Deployment Troubleshooting</h2>
+            <article class="question-block"><h3 class="question-title">General Tips for Diagnosing Issues <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p><strong>1. Check Logs Thoroughly:</strong> This is the first step. Platform logs (Heroku logs, Cloud Run logs, CloudWatch for Lambda) and application logs (Gunicorn output, Python logging).<br><strong>2. "It Works on My Machine":</strong> Often due to differences in environment variables, Python versions, or dependencies. Docker helps minimize this.<br><strong>3. Dependency Issues:</strong> Ensure <code>requirements.txt</code> is accurate and complete. Check for version conflicts.<br><strong>4. Port Binding:</strong> Ensure Gunicorn (or your WSGI server) is binding to <code>0.0.0.0</code> (all interfaces) and the correct port (often specified by a <code>$PORT</code> environment variable from the platform).<br><strong>5. Environment Variables Not Set:</strong> Double-check that API keys and other necessary env vars are correctly set on the hosting platform and accessible by your app.<br><strong>6. File Paths:</strong> Ensure any file paths in your code are relative or correctly configured for the deployment environment.<br><strong>7. CORS Errors:</strong> If your frontend can't reach the backend, check CORS configuration on the Flask app and any API Gateway settings.<br><strong>8. Timeout Errors:</strong> Long-running GenAI calls might exceed platform or Gunicorn timeouts. Consider asynchronous tasks, streaming, or increasing timeouts if appropriate.<br><strong>9. Resource Limits:</strong> Your app might be hitting CPU or memory limits on the chosen service plan. Monitor resource usage.</p></div></article>
+            <p><a href="#table-of-contents" class="back-to-top">Back to Table of Contents</a></p>
+        </section>
+
+        <section id="section-security" class="guide-section">
+            <h2>9. Deployment Security Best Practices</h2>
+            <article class="question-block"><h3 class="question-title">Key Security Reminders for Deployed Apps <span class="toggle-icon">[+]</span></h3><div class="answer-guidance" style="display: none;"><p><strong>1. HTTPS:</strong> Always use HTTPS. Most PaaS/FaaS platforms provide SSL/TLS termination and certificates automatically or with simple configuration.<br><strong>2. API Key Security:</strong> Reiterate: environment variables on the server, managed by the platform's secrets system. NEVER hardcode or commit keys.<br><strong>3. Update Dependencies:</strong> Regularly update Python packages (especially web frameworks and security-related ones) to patch vulnerabilities. Use tools like <code>pip-audit</code>.<br><strong>4. Least Privilege:</strong> If your app needs to interact with other cloud services (like storage), ensure the service account/role it uses has only the minimum necessary permissions.<br><strong>5. Input Validation:</strong> Sanitize and validate any input received from users or external sources, even if it's just a prompt for a GenAI.<br><strong>6. Error Handling:</strong> Don't expose detailed internal error messages or stack traces to the end-user. Log them securely on the server.<br><strong>7. CORS:</strong> Restrict CORS to only the necessary frontend origins.<br><strong>8. Flask Secret Key:</strong> Ensure <code>app.secret_key</code> (if you use Flask sessions) is a strong, random value set via an environment variable.<br><strong>9. Disable Debug Mode in Production:</strong> Ensure <code>FLASK_DEBUG</code> is <code>False</code> or not set in production.</p></div></article>
+            <p><a href="#table-of-contents" class="back-to-top">Back to Table of Contents</a></p>
+        </section>
+
+
+        <section id="tools-and-resources-main" class="guide-section">
+            <h2>10. Tools & Further Resources</h2>
+            <p class="section-intro">Additional resources to aid your deployment process.</p>
+             <ul>
+                <li>
+                    <strong>Methodological Paper & GitHub Organization:</strong>
+                    <ul>
+                        <li>
+                            Full Paper: <a href="https://github.com/GenAI-interaction-research/paper-and-resources/blob/main/250424_GenAI_web_apps_v0.1.pdf" target="_blank" rel="noopener noreferrer">Building GenAI-Driven Web Applications to Study USER-GenAI Interaction</a>
+                        </li>
+                        <li>
+                            Main GitHub Organization: <a href="https://github.com/GenAI-interaction-research" target="_blank" rel="noopener noreferrer">https://github.com/GenAI-interaction-research</a>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <strong>Script Snippet Generator:</strong>
+                    <ul>
+                        <li>
+                            <a href="https://genai-interaction-research.github.io/script_generator/" target="_blank" rel="noopener noreferrer">GenAI Script Snippet Generator</a>
+                        </li>
+                    </ul>
+                </li>
+                <li><strong>Official Platform Documentation:</strong> (Always refer to these for the most up-to-date info)
+                    <ul>
+                        <li><a href="https://devcenter.heroku.com/categories/python-support" target="_blank" rel="noopener noreferrer">Heroku Python Documentation</a></li>
+                        <li><a href="https://cloud.google.com/run/docs/deploying" target="_blank" rel="noopener noreferrer">Google Cloud Run Documentation</a></li>
+                        <li><a href="https://cloud.google.com/functions/docs/deploy" target="_blank" rel="noopener noreferrer">Google Cloud Functions Documentation</a></li>
+                        <li><a href="https://docs.aws.amazon.com/lambda/latest/dg/python-programming-model.html" target="_blank" rel="noopener noreferrer">AWS Lambda (Python) Documentation</a></li>
+                         <li><a href="https://www.digitalocean.com/community/tutorials?q=python+flask+app+platform" target="_blank" rel="noopener noreferrer">DigitalOcean App Platform Tutorials</a></li>
+                        <li><a href="https://docs.docker.com/get-started/" target="_blank" rel="noopener noreferrer">Docker Get Started Guide</a></li>
+                    </ul>
+                </li>
+            </ul>
+            <p><a href="#table-of-contents" class="back-to-top">Back to Table of Contents</a></p>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>This Deployment Guide is designed to complement the methodological paper on GenAI research applications.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
