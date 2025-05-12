@@ -2,7 +2,7 @@
 
 This interactive guide is designed to help researchers, particularly those with limited DevOps experience, navigate the process of deploying Python/Flask backend applications for their Generative AI (GenAI) studies. It complements the methodological paper: ["Building GenAI-Driven Web Applications to Study USER-GenAI Interaction"](https://github.com/GenAI-interaction-research/.github).
 
-**Access the Live Deployment Guide:** [https://genai-interaction-research.github.io/TOOL-deployment_guide]
+**Access the Deployment Guide:** [https://genai-interaction-research.github.io/TOOL-deployment_guide]
 
 ## Features
 
